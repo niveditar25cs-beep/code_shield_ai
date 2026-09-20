@@ -1,6 +1,6 @@
 /**
  * CodeScanner.jsx
- * Code snippet scanner tab. Uses ast extraction endpoint /api/scan-code.
+ * Code snippet scanner tab. Uses ast extraction endpoint /api/scan.
  */
 
 import { useState } from 'react';
@@ -8,6 +8,7 @@ import { useScanCode } from '../hooks/useAnalyze';
 import ScanResultsTable from './ScanResultsTable';
 import ResultDashboard from './ResultDashboard';
 import TextShimmerWave from './TextShimmerWave';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 const SAMPLE_CODE = `import os
 import sys
@@ -45,16 +46,16 @@ export default function CodeScanner() {
     <div className="code-scanner">
       {!selectedResult && (
         <div className="code-scanner__input-section">
-          <div className="input-header">
+          <div className="input-header mb-6">
             <div>
               <h3 className="scanner-title">Scan Python Source Code</h3>
-              <p className="scanner-subtitle">
+              <p className="scanner-subtitle mb-4">
                 Paste Python code suggested by AI to extract imports and analyze third-party packages in one pass.
               </p>
             </div>
             <button 
               type="button" 
-              className="btn btn--secondary btn--sm"
+              className="btn btn--secondary btn--sm mt-2"
               onClick={handleLoadSample}
             >
               Load Sample Code
@@ -71,10 +72,10 @@ export default function CodeScanner() {
             spellCheck="false"
           />
 
-          <div className="scanner-actions">
+          <div className="scanner-actions flex items-center gap-3">
             <button
               type="button"
-              className="btn btn--primary"
+              className="btn btn-primary"
               onClick={handleScan}
               disabled={!code.trim() || state.status === 'loading'}
             >
@@ -83,7 +84,7 @@ export default function CodeScanner() {
             {code && (
               <button 
                 type="button" 
-                className="btn btn--text" 
+                className="btn btn-secondary-dark" 
                 onClick={handleReset}
                 disabled={state.status === 'loading'}
               >
@@ -95,7 +96,7 @@ export default function CodeScanner() {
       )}
 
       {state.status === 'loading' && (
-        <div className="scanning-container">
+        <div className="scanning-container mt-6">
           <div className="scanning-header">
             <h3 className="scanning-title">Parsing AST & Analyzing Imports</h3>
             <TextShimmerWave text="Checking dependencies against PyPI registry & slopsquatting database..." />
@@ -104,17 +105,23 @@ export default function CodeScanner() {
       )}
 
       {state.status === 'error' && (
-        <div className="error-card" role="alert">
-          <h4 className="error-card__title">Code Scan Failed</h4>
+        <div className="error-card mt-6" role="alert">
+          <div className="error-card__header">
+            <AlertTriangle className="error-card__icon" size={24} />
+            <h4 className="error-card__title">Code Scan Failed</h4>
+          </div>
           <p className="error-card__text">{state.error}</p>
-          <button type="button" className="btn btn--secondary" onClick={() => reset()}>
-            Try Again
-          </button>
+          <div className="error-card__actions mt-4">
+            <button type="button" className="btn btn-danger-retry" onClick={() => scanCode(code)}>
+              <RefreshCw size={16} />
+              Retry Scan
+            </button>
+          </div>
         </div>
       )}
 
       {state.status === 'success' && state.data && !selectedResult && (
-        <div className="code-scanner__results">
+        <div className="code-scanner__results mt-6">
           <div className="results-header">
             <h4>Code Scan Analysis Results</h4>
             <button type="button" className="btn btn--outline btn--sm" onClick={handleReset}>
@@ -129,7 +136,7 @@ export default function CodeScanner() {
       )}
 
       {selectedResult && (
-        <div className="selected-result-modal">
+        <div className="selected-result-modal mt-6">
           <div className="modal-header">
             <button 
               type="button" 

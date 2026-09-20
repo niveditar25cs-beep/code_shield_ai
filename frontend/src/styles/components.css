@@ -1200,3 +1200,78 @@ h2, .section-title, .section-h2, .search-card-title, .about-title, .scanner-titl
   }
 }
 
+/* ── Error Card & Dark Secondary Button ────────────────────────────── */
+.error-card {
+  background: var(--color-red-glow);
+  border: 1px solid var(--color-red);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+}
+
+.error-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.error-card__icon {
+  color: var(--color-red);
+}
+
+.error-card__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.error-card__text {
+  font-size: 0.925rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.btn-danger-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-red);
+  color: #ffffff;
+  border: none;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-danger-retry:hover {
+  background: var(--color-red-dim);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
+.btn-secondary-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-3);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary-dark:hover {
+  background: var(--color-surface-2);
+  color: #ffffff;
+  border-color: var(--color-border-2);
+}
+
+

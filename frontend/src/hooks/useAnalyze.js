@@ -1,9 +1,10 @@
 /**
  * useAnalyze.js
- * Fetch hooks for /api/analyze and /api/scan with AbortController to ignore stale responses.
+ * Fetch hooks for /api/analyze and /api/scan using central API client.
  */
 
 import { useState, useRef, useCallback } from 'react';
+import { analyzePackage as fetchAnalyzePackage, scanCode as fetchScanCode } from '../api';
 
 export function useAnalyze() {
   const [state, setState] = useState({
@@ -25,42 +26,23 @@ export function useAnalyze() {
     setState({ status: 'loading', data: null, errorType: null, error: null });
 
     try {
-      const resp = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ package: packageName }),
-        signal: controller.signal,
-      });
-
+      const data = await fetchAnalyzePackage(packageName, controller.signal);
       if (controller.signal.aborted) return;
-      const data = await resp.json();
-      if (controller.signal.aborted) return;
-
-      if (!resp.ok) {
-        const errorType = data.error || 'UNKNOWN';
-        const mapped = resp.status === 502 ? 'REGISTRY_UNAVAILABLE'
-          : resp.status === 429 ? 'RATE_LIMITED'
-          : resp.status === 400 ? 'INVALID_NAME'
-          : errorType;
-
-        setState({
-          status: 'error',
-          data: null,
-          errorType: mapped,
-          error: data.message || 'An error occurred during analysis.',
-        });
-        return;
-      }
-
       setState({ status: 'success', data, errorType: null, error: null });
     } catch (err) {
       if (err.name === 'AbortError') return;
 
+      const isOffline = !err.status;
+      const errorType = isOffline ? 'OFFLINE' : (err.errorType || 'UNKNOWN');
+      const errorMessage = isOffline
+        ? 'Cannot reach the CodeShield backend. Make sure the server is running on port 5000.'
+        : err.message;
+
       setState({
         status: 'error',
         data: null,
-        errorType: 'OFFLINE',
-        error: 'Could not connect to the CodeShield AI backend. Please ensure the backend server is running.',
+        errorType,
+        error: errorMessage,
       });
     }
   }, []);
@@ -91,35 +73,23 @@ export function useScanCode() {
     setState({ status: 'loading', data: null, errorType: null, error: null });
 
     try {
-      const resp = await fetch('/api/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-        signal: controller.signal,
-      });
-
+      const data = await fetchScanCode(code, controller.signal);
       if (controller.signal.aborted) return;
-      const data = await resp.json();
-      if (controller.signal.aborted) return;
-
-      if (!resp.ok) {
-        setState({
-          status: 'error',
-          data: null,
-          errorType: data.error || 'UNKNOWN',
-          error: data.message || 'An error occurred during code scanning.',
-        });
-        return;
-      }
-
       setState({ status: 'success', data, errorType: null, error: null });
     } catch (err) {
       if (err.name === 'AbortError') return;
+
+      const isOffline = !err.status;
+      const errorType = isOffline ? 'OFFLINE' : (err.errorType || 'UNKNOWN');
+      const errorMessage = isOffline
+        ? 'Cannot reach the CodeShield backend. Make sure the server is running on port 5000.'
+        : err.message;
+
       setState({
         status: 'error',
         data: null,
-        errorType: 'OFFLINE',
-        error: 'Could not connect to backend.',
+        errorType,
+        error: errorMessage,
       });
     }
   }, []);
