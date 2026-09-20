@@ -1,0 +1,330 @@
+/* ============================================================
+   globals.css
+   CodeShield AI — Design tokens, reset, typography, utilities
+   ============================================================ */
+
+/* ── Google Fonts (MUST be first CSS rule) ────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Font ────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'BeautifulPoliceOfficer';
+  src: url('../assets/fonts/BeautifulPoliceOfficer-rvv8x.ttf') format('truetype'),
+       url('../assets/fonts/BeautifulPoliceOfficer.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── CSS Variables (Design Tokens) ──────────────────────────────────── */
+:root {
+  /* Colors */
+  --color-bg:          #04081a;
+  --color-bg-2:        #060c20;
+  --color-surface:     #0d1530;
+  --color-surface-2:   #111b3a;
+  --color-surface-3:   #162040;
+  --color-border:      rgba(99, 179, 237, 0.12);
+  --color-border-2:    rgba(99, 179, 237, 0.22);
+
+  /* Accent palette */
+  --color-green:       #22c55e;
+  --color-green-dim:   #16a34a;
+  --color-green-glow:  rgba(34, 197, 94, 0.18);
+  --color-amber:       #f59e0b;
+  --color-amber-dim:   #d97706;
+  --color-amber-glow:  rgba(245, 158, 11, 0.18);
+  --color-red:         #ef4444;
+  --color-red-dim:     #dc2626;
+  --color-red-glow:    rgba(239, 68, 68, 0.18);
+
+  /* Primary brand */
+  --color-primary:     #63b3ed;
+  --color-primary-dim: #3b82f6;
+  --color-primary-glow: rgba(99, 179, 237, 0.14);
+
+  /* Text */
+  --color-text:        #e2e8f0;
+  --color-text-muted:  #94a3b8;
+  --color-text-dim:    #64748b;
+
+  /* Typography */
+  --font-display: 'BeautifulPoliceOfficer', 'Impact', 'Arial Narrow', sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+
+  /* Spacing scale */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
+  --shadow-glow-green: 0 0 24px rgba(34,197,94,0.25);
+  --shadow-glow-amber: 0 0 24px rgba(245,158,11,0.25);
+  --shadow-glow-red:   0 0 24px rgba(239,68,68,0.25);
+  --shadow-glow-blue:  0 0 24px rgba(99,179,237,0.2);
+
+  /* Transitions */
+  --transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow:   400ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout */
+  --max-width: 72rem; /* 1152px = max-w-6xl */
+  --navbar-h:  64px;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: #050816;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  min-height: 100dvh;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img, svg { display: block; max-width: 100%; }
+button { cursor: pointer; }
+a { color: inherit; }
+ul, ol { list-style: none; }
+
+/* ── Utility classes ────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── 8px Grid Container (max-w-6xl px-4 sm:px-6 lg:px-8) ────────────── */
+.container,
+.site-container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: 1rem; /* px-4 */
+}
+
+@media (min-width: 640px) {
+  .container,
+  .site-container {
+    padding-inline: 1.5rem; /* px-6 */
+  }
+}
+
+@media (min-width: 1024px) {
+  .container,
+  .site-container {
+    padding-inline: 2rem; /* px-8 */
+  }
+}
+
+/* ── Consistent Section Vertical Padding (py-16 md:py-24 lg:py-28) ─── */
+.site-section {
+  position: relative;
+  width: 100%;
+  padding-top: 4rem; /* py-16 */
+  padding-bottom: 4rem;
+  background: transparent !important;
+}
+
+@media (min-width: 768px) {
+  .site-section {
+    padding-top: 6rem; /* py-24 */
+    padding-bottom: 6rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .site-section {
+    padding-top: 7rem; /* py-28 */
+    padding-bottom: 7rem;
+  }
+}
+
+/* ── Section Header Block Hierarchy ─────────────────────────────────── */
+.section-header-block {
+  text-align: center;
+  margin-bottom: 2.5rem; /* mt-10 */
+}
+
+@media (min-width: 768px) {
+  .section-header-block {
+    margin-bottom: 3.5rem; /* mt-14 */
+  }
+}
+
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.section-header-block .section-title {
+  margin-top: 0.75rem; /* mt-3 */
+  margin-bottom: 0;
+}
+
+.section-header-block .section-subtitle {
+  margin-top: 1rem; /* mt-4 */
+  max-width: 42rem; /* max-w-2xl */
+  margin-inline: auto;
+  color: var(--color-text-muted);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+/* ── Section Divider Line ───────────────────────────────────────────── */
+.section-divider-wrapper {
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (min-width: 640px) {
+  .section-divider-wrapper {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-divider-wrapper {
+    padding-inline: 2rem;
+  }
+}
+
+.section-divider-inner {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-divider-line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.35) 20%,
+    rgba(139, 92, 246, 0.55) 50%,
+    rgba(6, 182, 212, 0.35) 80%,
+    transparent 100%
+  );
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.section-divider-line.revealed {
+  transform: scaleX(1);
+}
+
+.section-divider-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22d3ee;
+  box-shadow: 0 0 10px #22d3ee, 0 0 20px rgba(34, 211, 238, 0.8);
+  transition: transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1) 250ms;
+}
+
+.section-divider-dot.revealed {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-divider-line {
+    transform: scaleX(1) !important;
+    transition: none !important;
+  }
+  .section-divider-dot {
+    transform: translate(-50%, -50%) scale(1) !important;
+    transition: none !important;
+  }
+}
+
+.display-font {
+  font-family: var(--font-display) !important;
+  font-weight: normal;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.mono { font-family: var(--font-mono) !important; }
+
+/* ── Focus rings ────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-surface-3); border-radius: 3px; }
+
+/* ── Grid background pattern ────────────────────────────────────────── */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(99,179,237,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,179,237,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Print: everything visible ──────────────────────────────────────── */
+@media print {
+  [data-inview] { opacity: 1 !important; transform: none !important; }
+}

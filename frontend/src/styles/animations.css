@@ -1,0 +1,427 @@
+/* ============================================================
+   animations.css
+   All keyframes, InView system, TextRoll, TextShimmerWave
+   No animation libraries — pure CSS transforms/opacity
+   ============================================================ */
+
+/* ── Keyframes ──────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Scanner sweep */
+@keyframes scanSweep {
+  0%   { top: 0%; opacity: 0.9; }
+  49%  { top: 100%; opacity: 0.9; }
+  50%  { top: 100%; opacity: 0; }
+  51%  { top: 0%;   opacity: 0; }
+  100% { top: 0%;   opacity: 0.9; }
+}
+
+/* Pulsing rings */
+@keyframes pulseRing {
+  0%   { transform: scale(0.85); opacity: 0.8; }
+  60%  { transform: scale(1.15); opacity: 0.3; }
+  100% { transform: scale(0.85); opacity: 0.8; }
+}
+
+@keyframes pulseRing2 {
+  0%   { transform: scale(0.7); opacity: 0.5; }
+  60%  { transform: scale(1.3); opacity: 0.1; }
+  100% { transform: scale(0.7); opacity: 0.5; }
+}
+
+/* Shield pulse */
+@keyframes shieldPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px currentColor); }
+  50%       { filter: drop-shadow(0 0 20px currentColor); }
+}
+
+/* Stage checkmark pop */
+@keyframes checkPop {
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Shimmer glow sweep */
+@keyframes shimmerGlow {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 1; }
+}
+
+/* Text roll per-char */
+@keyframes rollIn {
+  0%   { transform: rotateX(90deg) translateY(50%); opacity: 0; }
+  100% { transform: rotateX(0deg)  translateY(0);   opacity: 1; }
+}
+
+@keyframes rollOut {
+  0%   { transform: rotateX(0deg)   translateY(0);    opacity: 1; }
+  100% { transform: rotateX(-90deg) translateY(-50%); opacity: 0; }
+}
+
+/* Fade + scale for results cards */
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Dot blink */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* ── InView System ──────────────────────────────────────────────────── */
+/*
+  Usage: <div data-inview="fadeUp" data-inview-delay="100">
+  JS sets: hidden -> visible -> done
+  Overflow-x: clip (not hidden) so sticky works.
+*/
+
+[data-inview] {
+  will-change: opacity, transform;
+}
+
+/* Default hidden states per variant */
+[data-inview="fade"][data-inview-state="hidden"]      { opacity: 0; }
+[data-inview="fadeUp"][data-inview-state="hidden"]    { opacity: 0; transform: translateY(32px); }
+[data-inview="fadeDown"][data-inview-state="hidden"]  { opacity: 0; transform: translateY(-24px); }
+[data-inview="fadeLeft"][data-inview-state="hidden"]  { opacity: 0; transform: translateX(32px); }
+[data-inview="fadeRight"][data-inview-state="hidden"] { opacity: 0; transform: translateX(-32px); }
+[data-inview="slideUp"][data-inview-state="hidden"]   { opacity: 0; transform: translateY(48px); }
+[data-inview="scaleIn"][data-inview-state="hidden"]   { opacity: 0; transform: scale(0.90); }
+
+/* Visible: transition to natural position */
+[data-inview][data-inview-state="visible"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Done: remove will-change */
+[data-inview][data-inview-state="done"] {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* Transitions applied per variant (visible state) */
+[data-inview][data-inview-state="visible"],
+[data-inview][data-inview-state="done"] {
+  transition:
+    opacity var(--inview-duration, 500ms) var(--inview-ease, cubic-bezier(0.4,0,0.2,1)) var(--inview-delay, 0ms),
+    transform var(--inview-duration, 500ms) var(--inview-ease, cubic-bezier(0.4,0,0.2,1)) var(--inview-delay, 0ms);
+}
+
+/* Reveal on focus (keyboard nav) */
+[data-inview]:focus-within {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ── TextRoll ───────────────────────────────────────────────────────── */
+.text-roll {
+  display: inline-block;
+  perspective: 400px;
+}
+
+.text-roll-inner {
+  display: inline;
+  /* sr-only full text is separate */
+}
+
+.text-roll-char {
+  display: inline-block;
+  position: relative;
+  transform-origin: center 60%;
+  /* animation triggered by JS adding .rolling class */
+}
+
+.text-roll-char.space {
+  width: 0.3em;
+}
+
+/* Roll-in animation per char (JS sets animation-delay) */
+.text-roll[data-rolling="true"] .text-roll-char {
+  animation: rollIn 0.4s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+/* Hover re-roll on pointer devices only */
+@media (hover: hover) and (pointer: fine) {
+  .text-roll:hover .text-roll-char {
+    animation: rollIn 0.4s cubic-bezier(0.22,1,0.36,1) both;
+  }
+}
+
+/* ── TextShimmerWave ────────────────────────────────────────────────── */
+.shimmer-wave {
+  display: inline-block;
+  position: relative;
+}
+
+.shimmer-char {
+  display: inline-block;
+  position: relative;
+  animation: shimmerCharWave 1.6s ease-in-out infinite;
+}
+
+.shimmer-char.space { width: 0.3em; }
+
+@keyframes shimmerCharWave {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+  50%       { transform: translateY(-3px) scale(1.04); opacity: 1; }
+}
+
+/* ── Scanning animation ─────────────────────────────────────────────── */
+.scanner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-10) var(--space-4);
+}
+
+.scanner-shield-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanner-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary);
+  animation: pulseRing 2s ease-in-out infinite;
+}
+
+.scanner-ring-2 {
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  border: 1px solid var(--color-primary);
+  opacity: 0.4;
+  animation: pulseRing2 2s ease-in-out infinite 0.5s;
+}
+
+.scanner-ring-3 {
+  position: absolute;
+  inset: -32px;
+  border-radius: 50%;
+  border: 1px solid var(--color-primary);
+  opacity: 0.15;
+  animation: pulseRing2 2.5s ease-in-out infinite 1s;
+}
+
+.scanner-shield {
+  width: 80px;
+  height: 80px;
+  color: var(--color-primary);
+  animation: shieldPulse 2s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+.scanner-sweep-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--color-primary);
+}
+
+.scanner-sweep-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  animation: scanSweep 1.8s linear infinite;
+  box-shadow: 0 0 8px var(--color-primary), 0 0 2px var(--color-primary);
+}
+
+.scanner-stages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 380px;
+}
+
+.scanner-stage {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: all var(--transition-normal);
+  opacity: 0.45;
+}
+
+.scanner-stage.active {
+  opacity: 1;
+  border-color: var(--color-primary);
+  background: var(--color-surface-2);
+  box-shadow: 0 0 0 1px var(--color-primary-glow), inset 0 0 12px var(--color-primary-glow);
+}
+
+.scanner-stage.done {
+  opacity: 0.8;
+  border-color: var(--color-green);
+  background: rgba(34,197,94,0.06);
+}
+
+.scanner-stage-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border-2);
+  transition: all var(--transition-normal);
+}
+
+.scanner-stage.active .scanner-stage-icon {
+  background: var(--color-primary-glow);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.scanner-stage.done .scanner-stage-icon {
+  background: var(--color-green-glow);
+  border-color: var(--color-green);
+  color: var(--color-green);
+  animation: checkPop 0.3s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+.scanner-stage-text {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  flex: 1;
+}
+
+.scanner-stage.active .scanner-stage-text {
+  color: var(--color-text);
+}
+
+/* ── Reduced motion overrides ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  [data-inview] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .text-roll[data-rolling="true"] .text-roll-char,
+  .text-roll:hover .text-roll-char {
+    animation: none !important;
+  }
+
+  .shimmer-char {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .scanner-ring,
+  .scanner-ring-2,
+  .scanner-ring-3,
+  .scanner-shield,
+  .scanner-sweep-line {
+    animation: none !important;
+  }
+}
+
+/* ── Floating Wireframe Cubes ────────────────────────────────────────── */
+@keyframes floatCube1 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.95);
+  }
+  50% {
+    transform: translate3d(15px, -24px, 0) rotate(8deg) scale(1.02);
+  }
+  100% {
+    transform: translate3d(-10px, -45px, 0) rotate(16deg) scale(0.98);
+  }
+}
+
+@keyframes floatCube2 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate3d(-20px, 20px, 0) rotate(-10deg) scale(1.05);
+  }
+  100% {
+    transform: translate3d(10px, 40px, 0) rotate(-20deg) scale(0.95);
+  }
+}
+
+@keyframes floatCube3 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate3d(12px, -18px, 0) rotate(6deg) scale(1.03);
+  }
+  100% {
+    transform: translate3d(-15px, -32px, 0) rotate(-12deg) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wireframe-cube {
+    animation: none !important;
+  }
+}
+
