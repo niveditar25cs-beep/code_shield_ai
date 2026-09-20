@@ -16,7 +16,7 @@ export default function ExplanationCard({ explanation, details }) {
       
       {explanation && (
         <div className="explanation-body">
-          <p>{escapeText(explanation)}</p>
+          <p>{escapeText(typeof explanation === 'object' && explanation !== null ? (explanation.text || '') : explanation)}</p>
         </div>
       )}
 

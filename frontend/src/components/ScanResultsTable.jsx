@@ -80,7 +80,7 @@ export default function ScanResultsTable({ scanData, onSelectResult }) {
                   <td className="cell-evidence">
                     <span className="evidence-summary">
                       {status === 'VERIFIED' && 'Verified on PyPI registry'}
-                      {status === 'REVIEW_REQUIRED' && (item.explanation || 'Potential typosquat match')}
+                      {status === 'REVIEW_REQUIRED' && (typeof item.explanation === 'object' ? item.explanation?.text : item.explanation) || 'Potential typosquat match'}
                       {status === 'NOT_FOUND' && 'Package does NOT exist on PyPI!'}
                       {status === 'REGISTRY_UNAVAILABLE' && 'PyPI temporary connectivity issue'}
                     </span>
