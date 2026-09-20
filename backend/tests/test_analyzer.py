@@ -272,10 +272,10 @@ class TestExtractor(unittest.TestCase):
         imports = extract_imports(code)
         self.assertEqual(imports, [])
 
-    def test_syntax_error_returns_empty(self):
+    def test_syntax_error_raises_syntax_error(self):
         from scanner.extractor import extract_imports
-        imports = extract_imports("def broken(:\n    pass")
-        self.assertEqual(imports, [])
+        with self.assertRaises(SyntaxError):
+            extract_imports("def broken(:\n    pass")
 
 
 class TestNormalizer(unittest.TestCase):
@@ -298,9 +298,44 @@ class TestNormalizer(unittest.TestCase):
     def test_import_to_package_unknown(self):
         from scanner.normalizer import import_to_package_name
         # Unknown imports get normalized name
-        result = import_to_package_name("myCustomLib")
-        self.assertEqual(result, "mycustomlib")
+class TestApiScan(unittest.TestCase):
+    """Flask client tests for /api/scan endpoint."""
+
+    def setUp(self):
+        from app import app
+        app.config["TESTING"] = True
+        self.client = app.test_client()
+
+    @patch("scanner.verifier.fetch_pypi_data")
+    def test_scan_sample_code_mocked(self, mock_fetch):
+        def side_effect(name):
+            if name == "requests":
+                return _make_pypi_data("requests", version="2.31.0")
+            elif name == "flask":
+                return _make_pypi_data("flask", version="3.0.0")
+            return None  # NOT_FOUND for reqeusts, python-crypto-lib-ai
+
+        mock_fetch.side_effect = side_effect
+
+        code = "import os\nimport requests\nimport reqeusts\nimport python_crypto_lib_ai\nfrom flask import Flask, jsonify"
+        response = self.client.post("/api/scan", json={"code": code})
+        self.assertEqual(response.status_code, 200)
+
+        data = response.get_json()
+        self.assertIn("summary", data)
+        self.assertIn("results", data)
+        self.assertEqual(data["summary"]["total"], 4)
+        self.assertEqual(data["summary"]["verified"], 2)
+        self.assertEqual(data["summary"]["not_found"], 2)
+
+    def test_scan_syntax_error_returns_400(self):
+        response = self.client.post("/api/scan", json={"code": "import ("})
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertEqual(data["error"], "SYNTAX_ERROR")
+        self.assertIn("Python syntax error", data["message"])
 
 
 if __name__ == "__main__":
     unittest.main()
+

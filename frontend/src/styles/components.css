@@ -1232,6 +1232,13 @@ h2, .section-title, .section-h2, .search-card-title, .about-title, .scanner-titl
   line-height: 1.5;
 }
 
+.error-card__status-muted {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--color-text-dim);
+  margin-top: var(--space-2);
+}
+
 .btn-danger-retry {
   display: inline-flex;
   align-items: center;

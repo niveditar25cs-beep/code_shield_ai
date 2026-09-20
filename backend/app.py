@@ -30,7 +30,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder="../frontend/dist", static_url_path="/")
-CORS(app, origins=["http://localhost:5173", "http://localhost:3000"])
+CORS(app, origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"])
 
 # Maximum request body size: 100 KB
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024
@@ -67,7 +67,7 @@ def rate_limited(f):
         if not _check_rate_limit(ip):
             return jsonify({
                 "error": "RATE_LIMITED",
-                "message": "Too many requests. Please wait a moment before trying again.",
+                "message": "Too many requests, please wait a moment.",
             }), 429
         return f(*args, **kwargs)
     return decorated
@@ -125,93 +125,107 @@ def analyze():
         return jsonify({
             "error": "REGISTRY_UNAVAILABLE",
             "message": (
-                "Could not reach the PyPI registry. This is a temporary connectivity issue — "
-                "the package has not been classified as Not Found. Please try again shortly."
+                "Could not reach PyPI, so we can't tell whether this package exists."
             ),
         }), 502
     except Exception as exc:  # noqa: BLE001
-        logger.exception("Unexpected error in /api/analyze: %s", exc)
+        logger.exception("Unexpected server error in /api/analyze: %s", exc)
         return jsonify({
             "error": "INTERNAL_ERROR",
-            "message": "An unexpected error occurred. Please try again.",
+            "message": "Server error (INTERNAL_ERROR)",
         }), 500
 
 
 @app.post("/api/scan")
 @rate_limited
 def scan():
-    data = request.get_json(silent=True) or {}
-    code = data.get("code", "")
+    try:
+        data = request.get_json(silent=True) or {}
+        code = data.get("code", "")
 
-    if not isinstance(code, str):
-        return jsonify({"error": "INVALID_INPUT", "message": "code must be a string"}), 400
+        if not isinstance(code, str):
+            return jsonify({"error": "INVALID_INPUT", "message": "code must be a string"}), 400
 
-    # Limit code to 100 KB (belt + suspenders — Flask limit already set)
-    if len(code.encode("utf-8")) > 100 * 1024:
-        return jsonify({"error": "INVALID_INPUT", "message": "Code exceeds 100 KB limit"}), 400
+        # Limit code to 100 KB
+        if len(code.encode("utf-8")) > 100 * 1024:
+            return jsonify({"error": "INVALID_INPUT", "message": "Code exceeds 100 KB limit"}), 400
 
-    # Extract imports using ast — NEVER execute the code
-    import_names = extract_imports(code)
-
-    if not import_names:
-        return jsonify({
-            "summary": {
-                "total": 0,
-                "verified": 0,
-                "review_required": 0,
-                "not_found": 0,
-            },
-            "results": [],
-        })
-
-    results = []
-    counts = {
-        "VERIFIED": 0,
-        "REVIEW_REQUIRED": 0,
-        "NOT_FOUND": 0,
-    }
-
-    for import_name in import_names:
-        pkg_name = import_to_package_name(import_name)
-
-        # Validate derived package name before any network call
-        if not _validate_package_name(pkg_name):
-            logger.info("Skipping invalid derived name: %r", pkg_name)
-            continue
-
+        # Extract imports using ast — catches syntax errors
         try:
-            result = analyze_package(pkg_name)
-            results.append({
-                "import_name": import_name,
-                **result,
-            })
-            counts[result["status"]] = counts.get(result["status"], 0) + 1
-        except RegistryUnavailableError:
-            results.append({
-                "import_name": import_name,
-                "package_name": pkg_name,
-                "normalized_name": pkg_name,
-                "status": "REGISTRY_UNAVAILABLE",
-                "status_label": "Registry Unavailable",
-                "evidence": [],
-                "explanation": {"text": "Could not reach PyPI registry.", "source": "rule_based"},
-                "suggestions": [],
-                "next_step": "PyPI was unreachable. Please try again shortly.",
-                "disclaimer": "",
-                "checked_at": "",
-                "error": "REGISTRY_UNAVAILABLE",
-            })
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("Error scanning import %r: %s", import_name, exc)
+            import_names = extract_imports(code)
+        except SyntaxError as syn_err:
+            line_info = f" on line {syn_err.lineno}" if syn_err.lineno else ""
+            return jsonify({
+                "error": "SYNTAX_ERROR",
+                "message": f"Python syntax error{line_info}: {syn_err.msg or 'Invalid syntax'}",
+            }), 400
 
-    summary = {
-        "total": len(results),
-        "verified": counts["VERIFIED"],
-        "review_required": counts["REVIEW_REQUIRED"],
-        "not_found": counts["NOT_FOUND"],
-    }
+        if not import_names:
+            return jsonify({
+                "summary": {
+                    "total": 0,
+                    "verified": 0,
+                    "review_required": 0,
+                    "not_found": 0,
+                },
+                "results": [],
+            })
 
-    return jsonify({"summary": summary, "results": results})
+        results = []
+        counts = {
+            "VERIFIED": 0,
+            "REVIEW_REQUIRED": 0,
+            "NOT_FOUND": 0,
+        }
+
+        for import_name in import_names:
+            pkg_name = import_to_package_name(import_name)
+
+            # Validate derived package name before any network call
+            if not _validate_package_name(pkg_name):
+                logger.info("Skipping invalid derived name: %r", pkg_name)
+                continue
+
+            try:
+                result = analyze_package(pkg_name)
+                results.append({
+                    "import_name": import_name,
+                    **result,
+                })
+                counts[result["status"]] = counts.get(result["status"], 0) + 1
+            except RegistryUnavailableError:
+                results.append({
+                    "import_name": import_name,
+                    "package_name": pkg_name,
+                    "normalized_name": pkg_name,
+                    "status": "REGISTRY_UNAVAILABLE",
+                    "status_label": "Registry Unavailable",
+                    "evidence": [],
+                    "explanation": {"text": "Could not reach PyPI registry.", "source": "rule_based"},
+                    "suggestions": [],
+                    "next_step": "PyPI was unreachable. Please try again shortly.",
+                    "disclaimer": "",
+                    "checked_at": "",
+                    "error": "REGISTRY_UNAVAILABLE",
+                })
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Error scanning import %r: %s", import_name, exc)
+
+        summary = {
+            "total": len(results),
+            "verified": counts["VERIFIED"],
+            "review_required": counts["REVIEW_REQUIRED"],
+            "not_found": counts["NOT_FOUND"],
+        }
+
+        return jsonify({"summary": summary, "results": results})
+
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Unexpected server error in /api/scan: %s", exc)
+        return jsonify({
+            "error": "INTERNAL_ERROR",
+            "message": "Server error (INTERNAL_ERROR)",
+        }), 500
 
 
 # ---------------------------------------------------------------------------

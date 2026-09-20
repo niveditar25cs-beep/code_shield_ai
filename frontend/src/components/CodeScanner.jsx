@@ -111,6 +111,11 @@ export default function CodeScanner() {
             <h4 className="error-card__title">Code Scan Failed</h4>
           </div>
           <p className="error-card__text">{state.error}</p>
+          {state.httpStatus > 0 && (
+            <span className="error-card__status-muted">
+              HTTP Status: {state.httpStatus} ({state.errorType || 'ERROR'})
+            </span>
+          )}
           <div className="error-card__actions mt-4">
             <button type="button" className="btn btn-danger-retry" onClick={() => scanCode(code)}>
               <RefreshCw size={16} />

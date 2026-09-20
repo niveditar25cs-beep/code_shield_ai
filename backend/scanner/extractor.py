@@ -5,11 +5,12 @@ Extract third-party import names from Python source code using ast.
 """
 
 import ast
+import sys
 import builtins
 
-# Standard library top-level modules (Python 3.x).
+# Standard library top-level modules (Python 3.x fallback + stdlib_module_names if present).
 # We skip these so only third-party packages are returned.
-STDLIB_MODULES = {
+_FALLBACK_STDLIB = {
     "__future__", "__main__", "_thread", "abc", "aifc", "argparse", "array",
     "ast", "asynchat", "asyncio", "asyncore", "atexit", "audioop", "base64",
     "bdb", "binascii", "binhex", "bisect", "builtins", "bz2", "calendar",
@@ -46,6 +47,7 @@ STDLIB_MODULES = {
     "ntpath", "posixpath", "fnmatch",
 }
 
+STDLIB_MODULES = set(getattr(sys, "stdlib_module_names", _FALLBACK_STDLIB)) | _FALLBACK_STDLIB
 BUILTIN_NAMES = set(dir(builtins))
 
 
@@ -54,13 +56,9 @@ def extract_imports(source_code: str) -> list[str]:
     Parse Python source with ast and return a deduplicated, sorted list of
     top-level third-party import names (not stdlib, not relative).
 
-    Returns an empty list if the source cannot be parsed.
+    Raises SyntaxError if source code cannot be parsed.
     """
-    try:
-        tree = ast.parse(source_code)
-    except SyntaxError:
-        return []
-
+    tree = ast.parse(source_code)
     imports: set[str] = set()
 
     for node in ast.walk(tree):
