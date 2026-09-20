@@ -15,10 +15,9 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import siteBgUrl from '../assets/bg/site-bg.webp';
 
-// Safely probe for optional background image without build errors if missing
-const bgGlob = import.meta.glob('../assets/bg/site-bg.webp', { eager: true, as: 'url' });
-const OPTIONAL_BG_URL = bgGlob['../assets/bg/site-bg.webp'] || null;
+const OPTIONAL_BG_URL = siteBgUrl || null;
 
 const CODE_CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ{}<>/%&#;:=+*!~';
 const CODE_WORDS = ['import', 'pip', 'PyPI', 'def', 'async', 'verify', 'hash', 'sha256', 'guard', 'AST'];
