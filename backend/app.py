@@ -30,7 +30,25 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder="../frontend/dist", static_url_path="/")
-CORS(app, origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"])
+
+_ALLOWED_ORIGINS = {
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+}
+
+
+def _cors_origins(origin: str) -> bool:
+    """Allow localhost dev servers and all *.vercel.app deployments."""
+    if origin in _ALLOWED_ORIGINS:
+        return True
+    if origin and (origin.endswith(".vercel.app") or "vercel.app" in origin):
+        return True
+    return False
+
+
+CORS(app, origins=_cors_origins, supports_credentials=False)
 
 # Maximum request body size: 100 KB
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024
